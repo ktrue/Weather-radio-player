@@ -31,6 +31,7 @@
 // Version 1.01 - 29-Jun-2017 - add local (fixed) bootstrap.3.3.7-mod.min.css for dark templatesz+autoplay
 // Version 1.04 - 05-Jul-2017 - corrected attributions, added more Saratoga template awareness
 // Version 2.00 - 06-Aug-2018 - update to use Leaflet/OpenStreetMaps instead of Google map
+// Version 3.00 - 08-Dec-2019 - support for new NWS NWR site at weather.gov
 require_once("Settings.php");
 require_once("common.php");
 ############################################################################

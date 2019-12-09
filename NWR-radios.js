@@ -21,6 +21,7 @@ Major changes from the Chappell/Clifton/Lincoln versions include:
 // Version 1.04 - 05-Jul-2017 - corrected attributions
 // Version 2.00 - 06-Aug-2018 - rewrite to use Leaflet/OpenStreetMaps+others for map display
 // Version 2.02 - 11-Feb-2019 - use direct https link for NWR coverage graphic map
+// Version 3.00 - 08-Dec-2019 - modified to use www.weather.gov/nwr sources for data as www.nws.noaa.gov/nwr is deprecated
 
 */
 // note: all the data will come from NWR-radio-data.js JSON loaded by the HTML page
@@ -28,6 +29,31 @@ var selectedstation = '';
 var mymap;
 var lastCall;
 var mapTileObj;
+var	SC = Array();
+/* V3.00 added functions */
+function initSC () {
+	SC.length=0;
+	//console.log('initSC length='+SC.length);
+}
+
+function addSC (text) {
+	//console.log('addSC="'+text+'"');
+	SC.push(text);
+	//console.log(SC);
+	//console.log('addSC length='+SC.length);
+}
+
+function getSC () {
+  //console.log('getSC length='+SC.length);
+  SC.sort();
+	//console.log('getSC sorted');
+	//console.log(SC);
+	var text = SC.join(', ');
+	//console.log('getSC text="'+text+'"');
+	return text;
+}
+/* end V3.00 added functions (*/
+
 function loadDropdown(data,findstation) {
 	// generate the option/select box HTML from the JSON file
 /*
@@ -161,17 +187,23 @@ function showStation(call, auto) {
     $('#provide').html(txt);
     var txt = '<img src="' + data[call].logo + '" height="50 width="50" alt="" />'
     $('#logo').html(txt);
-		//var nwrcallsign = data[call].mapurl;
-		//nwrcallsign = nwrcallsign.replace('http://www.nws.noaa.gov/nwr/Maps/GIF/','');
-		//nwrcallsign = nwrcallsign.replace('.gif','');
-    //var txt = '<img src="NWR-coverage.php?map=' + nwrcallsign + '" class="img-responsive" style="padding:5%;width:95%" alt="Coverage Map - ' + data[call].loc + ' Not Available" />'
+    var mapurl = data[call].mapurl;
 		
-    var txt = '<img src="' + data[call].mapurl + '" class="img-responsive" style="padding:5%;width:95%" alt="Coverage Map - ' + data[call].loc + ' Not Available" />'
+    if(mapurl !== '' && !mapurl.match(/WNWS/)) {
+    var txt = '<a href="https://www.weather.gov/nwr/sites?site=' + call + '"  style="text-align:center" alt="Coverage Map - ' + data[call].loc + ' Available" target="_blank">NWR Transmitter Coverage Map/Details for '+call+'</a>'
+		} else if(mapurl == '') {
+			var txt = 'Canada transmitter coverage maps are not available.';
+		} else {
+			txt = '';
+		}
     $('#cmap').html(txt);
     var txt = data[call].loc + ' Radio ' + data[call].call + ' Coverage Area';
     $('#maphead').html(txt);
     lastCall = call;
+    initSC();
+		$('#samecodes').html('');
     showmap(call);
+ 
     setTimeout(function(){checkNetwork();},10000);
 }
 
@@ -213,8 +245,10 @@ function showmap(call) {
         '<h4>Sited at ' + data[call].xmloc +  '</h4>\n'+
         '<div id="bodyContent">\n'+
         '<table>\n' +
-        '<tr><td><b>Latitude:</b></td><td>' + data[call].lat + '</td></tr>\n'+
-        '<tr><td><b>Longitude:</b></td><td>' + data[call].long + '</td></tr>\n'+
+        '<tr><td>Latitude:</td><td><b>' + data[call].lat + '</b></td></tr>\n'+
+        '<tr><td>Longitude:</td><td><b>' + data[call].long + '</b></td></tr>\n'+
+        '<tr><td>Power:</td><td><b>' + data[call].watts + '</b> Watts</td></tr>\n'+
+        '<tr><td>Frequency:</td><td><b>' + data[call].freq + '</b></td></tr>\n'+
         '</table>\n' +
         '</div>\n'+
         '</div>\n';
@@ -233,7 +267,7 @@ function showmap(call) {
 
     mymap = L.map('map', {
 		center: new L.latLng(data[call].lat, data[call].long),
-		zoom: 11,
+		zoom: 8,
 		minZoom: 2,
 		layers: [mapProvider],
 		scrollWheelZoom: false
@@ -248,12 +282,129 @@ function showmap(call) {
     var line = L.polyline(lineData, {stroke: false});
     mymap.addLayer(line);
 
-    L.control.layers(baseLayers).addTo(mymap);
+//* V3.00 additions
+	initSC();
+  var NWSinfo = new Object;
+  if(data[call].mapurl !== '' && ! data[call].mapurl.match(/WNWS.gif/)) { // do only for NWS stations
+    var shpfile = new L.Shapefile('NWR-coverage.php?prop='+ call + '&type=.zip', {
+			  crossOrigin: 'anonymous',
+				useCors: false,
+        style: function(feature) {
+            return {
+                color: "Black",
+                opacity: 0.4,
+                weight: 1,
+                fillColor: "#36FF36",
+                fillOpacity: 0.45
+            }
+        },
+				onEachFeature: function(feature, layer){
+          layer.bindPopup("<strong>Transmitter Information</strong><br />Call Sign: <b>" + feature.properties.NWR_ID
+					+ "</b><br>Type: <b>"+feature.properties.MANUFACTUR + " " +feature.properties.TRANS_TYPE
+					+ "</b><br>Installed <b>"+feature.properties.DATES + "</b> by <b>" + feature.properties.FUNDING+"</b>");
+					NWSinfo['call'] = feature.properties.NWR_ID;
+					NWSinfo['radio'] = feature.properties.MANUFACTUR + " " +feature.properties.TRANS_TYPE;
+					NWSinfo['install'] = feature.properties.DATES + " by " + feature.properties.FUNDING;
+					//console.log(NWSinfo);
+          layer.on('mouseover', function() { layer.openPopup(); });
+          layer.on('mouseout', function() { layer.closePopup(); });
+        }
+
+    });
+/* sample properties in .zip file
+NWR_ID: KEC49
+ST: CA
+FISC_YEAR: 1984
+YEARS: 1984
+DATES: 7/1/1984
+FUNDING: NWS
+FREQUENCY: 162.55
+TRANS_TYPE: B252
+MANUFACTUR: ARMSTRONG
+SITE_NAME: Monterey
+
+*/
+
+
+//    shpfile.addTo(mymap);
+          
+    // Custom Stripes
+ 
+    var stripes = new L.StripePattern({
+        angle: 40,
+        color: "Green",
+        weight: 2.1
+    }).addTo(mymap);
+/*
+    SC = ["Alameda (SAME 006001)",
+"San Mateo (SAME 006081)",
+"Santa Clara (SAME 006085)",
+"San Benito (SAME 006069)",
+"Monterey (SAME 006053)",
+"Contra Costa (SAME 006013)",
+"San Francisco (SAME 006075)",
+"Santa Cruz (SAME 006087)",
+"Napa (SAME 006055)"];
+//*/
+		
+    // LOAD COUNTY ALERTING AREA SHAPE FILES
+    var cntyfile = new L.Shapefile('NWR-coverage.php?cover=' + call + '&type=_same.zip', { 
+			  crossOrigin: 'anonymous',
+				useCors: false,
+        style: function(feature) {
+            return {
+                color: "Blue",
+                opacity: 1,
+                weight: 2,
+                fillPattern: stripes,
+            }
+        },
+        onEachFeature: function(feature, layer){
+          layer.bindPopup("<strong>COUNTY</strong><br /><b>" + feature.properties.NAME
+					+ "</b><br>SAME: <b>0"+feature.properties.FIPS+"</b>");
+					addSC('<b>'+feature.properties.NAME+"</b> (SAME 0"+feature.properties.FIPS+")");
+					// console.log(SC);
+          layer.on('mouseover', function() { layer.openPopup(); });
+          layer.on('mouseout', function() { layer.closePopup(); });
+        }
+    }).on('layeradd',function(ev) {
+				var text = getSC();
+		    $('#samecodes').html(text);
+
+		});
+		
+
+/* sample properties in _same.zip file:
+STATEFP: 06
+COUNTYFP: 085
+GEOID: 06085
+NAME: Santa Clara
+OBJECTID_1: 540
+Name_1: Santa Clara
+FIPS: 06085
+Call_sign: KEC49
+*/
+
+//    cntyfile.addTo(map);
+    var overlayMap = {
+        "Propagation": shpfile,
+        "Alerting Area": cntyfile
+    };
+
+    L.control.layers(baseLayers,overlayMap,{collapsed:false}).addTo(mymap);
+	} else { // not an NWS station
+    L.control.layers(baseLayers,{},{collapsed:false}).addTo(mymap);
+	} // end extra V3.00 shapefile handling
+
+		
+//* end V3.00 addition */
+
+//    L.control.layers(baseLayers).addTo(mymap);
 
     // add the animated marker
     var animatedMarker = L.animatedMarker(line.getLatLngs(), {
         icon: xmitr,
-        interval: 50,
+        interval: 5,
         distance: 500
     }).bindTooltip(call + ' - Click for details').bindPopup(content);
     mymap.addLayer(animatedMarker);

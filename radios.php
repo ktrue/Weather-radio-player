@@ -18,6 +18,7 @@ if (isset($_REQUEST['sce']) && ( strtolower($_REQUEST['sce']) == 'view' or
 // Version 1.01 - 29-Jun-2017 - added autoplaystartup + map selection
 // Version 1.04 - 05-Jul-2017 - corrected attributions for script, added backgroundcolor option
 // Version 2.00 - 06-Aug-2018 - update to use Leaflet/OpenStreetMaps instead of Google map
+// Version 3.00 - 08-Dec-2019 - support for NWS NWR site at weather.gov
 ############################################################################
 # wxradio settings
 #

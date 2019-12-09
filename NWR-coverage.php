@@ -1,37 +1,89 @@
 <?php
 #
-# a simple proxy program to get/return the http://www.nws.noaa.gov/nwr/Maps/GIF/{radio}.gif
+# a simple proxy program to get/return the https://www.weather.gov/nwr/Maps/GIF/{radio}.gif
 # so the radios.php/wxradio.php can use HTTPS even while www.nws.noaa.gov is HTTP only
 #
 # Author: Ken True https://saratoga-weather.org/
 #
 # Version 1.00 - 06-Aug-2018 - initial release with wxradio V2.00
+# Version 2.00 - 08-Dec-2019 - repurposed for proxy access to radio coverage shapefiles
 
-$NWRmapURL = 'http://www.nws.noaa.gov/nwr/Maps/GIF/%s.gif';
-$RADIO = '';
+$cacheName = "NWR-radios-data.js";  // used to store the file so we don't have to
+$JSON = array();
 
-if(isset($_GET['map'])) {
-	$RADIO = preg_replace('/[^A-Z0-9]/','',$_GET['map']); //
-}
-if(strlen($RADIO) <= 6 and strlen($RADIO) > 3) {
-		$URL = sprintf($NWRmapURL,$RADIO);
-		$image = NWR_fetchUrlWithoutHanging($URL,false);
-		if(strlen($image) > 500) {
-			header("Content-type: image/gif");
-			print $image;
-			return;
-		}
-}
-# oops.. fell thru.. emit the no-image
-if(file_exists("./ajax-images/NWR-no-map.gif")) {
-	header("Content-type: image/gif");
-	readfile("./ajax-images/NWR-no-map.gif");
-	//$image = imagecreatefromgif("./ajax-images/NWR-no-map.gif");
-	//imagegif($image);
+if(file_exists($cacheName)) {
+	$html = file_get_contents($cacheName);
+  $i = strpos($html,"var data = ");
+  $headers = substr($html,0,$i);
+  $content = substr($html,$i);
+	// have to convert from JavaScript to pure JSON format:
+	$content = str_replace('var data = ','',$content);
+	$content = str_replace('};','}',$content);
+//	header("Content-type: text/plain");
+//	print $content;
+	$JSON = json_decode($content,true);
+	switch (json_last_error()) {
+	  case JSON_ERROR_NONE:           $error = '';                                                break;
+	  case JSON_ERROR_DEPTH:          $error = '- Maximum stack depth exceeded';                             break;
+	  case JSON_ERROR_STATE_MISMATCH: $error = '- Underflow or the modes mismatch';                          break;
+	  case JSON_ERROR_CTRL_CHAR:      $error = '- Unexpected control character found';                       break;
+	  case JSON_ERROR_SYNTAX:         $error = '- Syntax error, malformed JSON';                             break;
+	  case JSON_ERROR_UTF8:           $error = '- Malformed UTF-8 characters, possibly incorrectly encoded'; break;
+	  default:                        $error = '- Unknown error';                                            break;
+	}
+//  print  "JSON decode $error\n";
+//	print var_export($JSON);
 }
 	
 
+$RADIO = '';
 
+if(isset($_GET['prop'])) {
+	$RADIO = preg_replace('/[^A-Z0-9]/','',$_GET['prop']); //
+  $NWRURL = 'https://www.weather.gov/source/nwr/shape/%s.zip';
+	$radioZIP = $RADIO.".zip";
+}
+
+if(isset($_GET['cover'])) {
+	$RADIO = preg_replace('/[^A-Z0-9]/','',$_GET['cover']); //
+  $NWRURL = 'https://www.weather.gov/source/nwr/same/%s_same.zip';
+	$radioZIP = $RADIO."_same.zip";
+}
+
+if(strlen($RADIO) <= 6 and strlen($RADIO) > 3 and 
+    isset($JSON[$RADIO]) and !empty($JSON[$RADIO]['mapurl']) ) {
+		$URL = sprintf($NWRURL,$RADIO);
+		list($headers,$content) = NWR_fetchUrlWithoutHanging($URL,false);
+		if(preg_match('|\nLast-Modified: (.*)\r\n|Uis',$headers,$M)) {
+			$lastModified = "Last-Modified: ".$M[1];
+		} else {
+			$lastModified = '';
+		}
+		//file_put_contents($radioZIP.'headers.txt',$headers);
+		if(strlen($content) > 10) {
+			header("Content-type: application/zip");
+			header("Content-Length: " . strlen($content));
+			if(strlen($lastModified) > 0) {
+				header($lastModified);
+			}
+			print $content;
+			return;
+		}
+}
+	
+header("HTTP/1.0 404 Not Found");
+if(isset($_REQUEST['debug'])) {
+	print "<pre>\n";
+	print "RADIO='$RADIO'\n";
+	print "NWRURL='$NWRURL'\n";
+	print "Headers:\n".$headers."\n";
+	print "error: $error\n";
+	if(strlen($error)>0) {
+		print "----------raw JSON string----------------\n";
+		print $content;
+		print "\n---------------------------------------\n";
+	}
+}
 # -------------------functions -------------------------------
 function NWR_fetchUrlWithoutHanging($url,$useFopen) {
 // get contents from one URL and return as string 
@@ -56,7 +108,7 @@ function NWR_fetchUrlWithoutHanging($url,$useFopen) {
 
   curl_setopt($ch,CURLOPT_HTTPHEADER,                          // request LD-JSON format
      array (
-         "Accept: text/html,text/plain"
+         "Accept: application/zip"
      ));
 
   curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $numberOfSeconds);  //  connection timeout
@@ -145,7 +197,7 @@ Array
   if($cinfo['http_code'] <> '200') {
     $Status .= "<!-- headers returned:\n".$headers."\n -->\n"; 
   }
-  return $content;                                                 // return headers+contents
+  return array($headers,$content);                                                 // return headers+contents
 
  } else {
 //   print "<!-- using file_get_contents function -->\n";

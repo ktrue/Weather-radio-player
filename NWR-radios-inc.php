@@ -6,6 +6,7 @@
 // Version 1.04 - 05-Jul-2017 - corrected attributions, added Saratoga Template awareness
 // Version 2.00 - 06-Aug-2018 - update to use Leaflet/OpenStreetMaps instead of Google map
 // Version 2.01 - 15-Sep-2018 - support for HTTPS for noaaweatherradio.org accesses
+// Version 3.00 - 08-Dec-2019 - support for new NWS NWR site at weather.gov
 //
 
 if(file_exists("Settings.php")) {include_once("Settings.php"); }
@@ -146,7 +147,7 @@ $mapTileProviders = array(
 	print "</script>\n";
 ?>
 <script src="NWR-radios.js"></script>
-  <!-- include-wxradio2.php - Version 2.00 - 25-May-2018 -->
+  <!-- NWR-radios-inc.php - Version 3.00 - 08-Dec-2019 -->
   <div class="container-fluid">
       <div class="row">
         <div class="col-sm-<?php print $setCols; ?>" style="background-color:<?php print $backgroundColor; ?>; text-align: center; border: solid 2px black; border-radius: 10px">
@@ -161,7 +162,7 @@ $mapTileProviders = array(
           <div><span id="locate" style="color:green"></span></div>
           <div>Transmitter location: <span id="xmloc" style="color:green"></span></div>
           <div>Stream Provided By: <span id="provide" style="color:green"></span></div>
-          <p><small>Radio transmission courtesy of <a href="http://www.nws.noaa.gov/nwr/">NOAA</a> or <a href="https://www.ec.gc.ca/meteo-weather/default.asp?lang=En&amp;n=792F2D20-1">Environment Canada.</a></small></p>
+          <p><small>Radio transmission courtesy of <a href="https://www.weather.gov/nwr/">NOAA</a> or <a href="https://www.ec.gc.ca/meteo-weather/default.asp?lang=En&amp;n=792F2D20-1">Environment Canada.</a></small></p>
           <p><b>This Audio Stream Player is not to be used for protection of life or property.</b>  Please see below for more details.<br/>
           These audio streams are graciously provided by personal weather website owners and others though <a href="https://noaaweatherradio.org/" target="_blank">NOAAWEATHERRADIO.org</a>.</p> 
           <div id="provider"></div>
@@ -175,9 +176,10 @@ $mapTileProviders = array(
           <div style="border: solid 2px black; border-radius: 10px">
               <h3 id="maphead">LOADING&nbsp;DATA - PLEASE&nbsp;STANDBY</h3>
               <div id="cmap" class="img-responsive"></div>
+              <div id="samecodes" style="text-align:center"></div>
           </div>
           <div style="text-align:left">
-              <b>This Audio Stream Player is not to be used for protection of life or property.</b> Please remember that you should NOT rely on this Internet audio to receive watches or warnings. Instead, you should have your own dedicated <a href="http://www.nws.noaa.gov/nwr/" target="_blank">NOAA</a> or <a href="https://www.ec.gc.ca/meteo-weather/default.asp?lang=En&amp;n=792F2D20-1" target="_blank">Environment Canada</a> Weather Radio receiver which will alert you 24 hours a day to hazards in your area.  This stream player is provided as a convenience and is not an authoritative source for official watches, warnings or advisories -- those should be obtained directly using your own NOAA or EC Weather Radio receiver.  Please do not rely on this page as your only source to hear NOAA/EC radio. When you need it most, storms may cause power outages at this end. It is a good idea to mainly rely on a separate NOAA/EC radio with battery back-up. <br/><br/>
+              <b>This Audio Stream Player is not to be used for protection of life or property.</b> Please remember that you should NOT rely on this Internet audio to receive watches or warnings. Instead, you should have your own dedicated <a href="https://www.weather.gov/nwr/" target="_blank">NOAA</a> or <a href="https://www.ec.gc.ca/meteo-weather/default.asp?lang=En&amp;n=792F2D20-1" target="_blank">Environment Canada</a> Weather Radio receiver which will alert you 24 hours a day to hazards in your area.  This stream player is provided as a convenience and is not an authoritative source for official watches, warnings or advisories -- those should be obtained directly using your own NOAA or EC Weather Radio receiver.  Please do not rely on this page as your only source to hear NOAA/EC radio. When you need it most, storms may cause power outages at this end. It is a good idea to mainly rely on a separate NOAA/EC radio with battery back-up. <br/><br/>
               <b>Note:</b> Due to streaming software delays, this audio may be behind the NOAA/EC radio broadcast.
             <br/><br/>
               If you are interested in providing a stream for a NOAA/EC weather radio in your area, please

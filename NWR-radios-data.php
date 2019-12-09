@@ -7,6 +7,7 @@
 // Version 1.00 - 26-Jun-2017 - initial release
 // Version 1.01 - 02-Aug-2017 - added header type text/javascript to fix 'nosniff' issue
 // Version 1.02 - 15-Sep-2018 - support for HTTPS for noaaweatherradio.org accesses
+// Version 3.00 - 08-Dec-2019 - support for moved NWR site to weather.gov
 //
 // Settings (not normally needing change as Saratoga template overrides will work)
 //

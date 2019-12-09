@@ -13,6 +13,10 @@ The script uses a JavaScript/JSON file maintained on [noaaweatherradio.org](http
 Version 2.00 of the script now uses Leaflet/OpenStreetMaps to generate the location map for the transmitter. You no longer need a Google API key as the map does not use Google Maps for display. If you have a Mapbox.com Access Token, you can display two additional Mapbox maps, but that is optional. Five open (no key) maps are available with the Version 2.00 script.  
 Major thanks are given to Doug Chappelle for his initial conversion of the V1.x script to Leaflet -- I've just put some finishing touches and packaging on his work. Note also that the Standalone and Template versions are now combined into one distribution with common support code.
 
+Version 3.00 of the script leverages data at the new [NWR Site](https://www.weather.gov/nwr/) and adds shapefile displays of
+transmitter propagation and county/SAME codes covered for all NWS sites.  The default option is not-displayed for these two overlays,
+but a simple click on the checkbox in the map menu will enable the display of the overlay(s).
+Note that this feature is not available for EC radios or for static streams that may appear on noaaweatherradio.org site.
 ## Sample output
 
 <img src="sample-output.png" alt="screen capture of sample output">
