@@ -22,6 +22,7 @@ Major changes from the Chappell/Clifton/Lincoln versions include:
 // Version 2.00 - 06-Aug-2018 - rewrite to use Leaflet/OpenStreetMaps+others for map display
 // Version 2.02 - 11-Feb-2019 - use direct https link for NWR coverage graphic map
 // Version 3.00 - 08-Dec-2019 - modified to use www.weather.gov/nwr sources for data as www.nws.noaa.gov/nwr is deprecated
+// Version 3.01 - 25-May-2020 - added SSL/padlock indicators for SSL streams
 
 */
 // note: all the data will come from NWR-radio-data.js JSON loaded by the HTML page
@@ -132,7 +133,11 @@ function loadDropdown(data,findstation) {
 			     selectedstation = call;
 			 }
 		}
-		out += "<option value=\""+call+"\""+sel+">"+callx;
+		var ssl = '';
+		if(data[call].wxurl.includes('https://')) {
+			ssl = '&nbsp;&#128274;&nbsp;';
+		}
+		out += "<option value=\""+call+"\""+sel+">"+callx+ssl;
 //		if(call !== data[call].wxown) {
 	  if(data[call].alt == 'Y') {
 			out += " Alternate";
@@ -179,10 +184,16 @@ function showStation(call, auto) {
     $('#freq').html(data[call].freq);
     $('#locate').html(data[call].loc);
 		$('#xmloc').html(data[call].xmloc);
+		var ssl = '';
+		var who = data[call].who;
+		if(data[call].wxurl.includes('https://')) {
+			ssl = '&nbsp;&#128274;&nbsp;';
+			who = who.replace(/#ffff00/,'#4caf50');
+		}
     if(data[call].wxurl == "") {
-        var txt = data[call].who;
+        var txt = ssl+who;
     } else {
-        var txt = '<a href="' + data[call].wxurl + '" target="_blank">' + data[call].who + '</a>';
+        var txt = '<a href="' + data[call].wxurl + '" target="_blank">' + ssl+who + '</a>';
     }
     $('#provide').html(txt);
     var txt = '<img src="' + data[call].logo + '" height="50 width="50" alt="" />'
