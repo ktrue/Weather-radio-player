@@ -134,7 +134,7 @@ function loadDropdown(data,findstation) {
 			 }
 		}
 		var ssl = '';
-		if(data[call].wxurl.includes('https://')) {
+		if(data[call].radiourl.includes('https://')) {
 			ssl = '&nbsp;&#128274;&nbsp;';
 		}
 		out += "<option value=\""+call+"\""+sel+">"+callx+ssl;
@@ -186,7 +186,7 @@ function showStation(call, auto) {
 		$('#xmloc').html(data[call].xmloc);
 		var ssl = '';
 		var who = data[call].who;
-		if(data[call].wxurl.includes('https://')) {
+		if(data[call].radiourl.includes('https://')) {
 			ssl = '&nbsp;&#128274;&nbsp;';
 			who = who.replace(/#ffff00/,'#4caf50');
 		}
