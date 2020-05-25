@@ -167,7 +167,7 @@ $mapTileProviders = array(
           <p><b>This Audio Stream Player is not to be used for protection of life or property.</b><br/>
           Streams with &#128274; are provided with SSL (https:) streaming.<br/>
           Your browser may not support playing non-SSL streams if you are viewing this site with https:// (secure).<br/>
-          These audio streams are graciously provided by personal weather website owners and others though <a href="https://noaaweatherradio.org/" target="_blank">NOAAWEATHERRADIO.org</a>.</p> 
+          These audio streams are graciously provided by personal weather website owners and others through <a href="https://noaaweatherradio.org/" target="_blank">NOAAWEATHERRADIO.org</a>.</p> 
           <div id="provider"></div>
           <div id="map_container" style="border: solid 2px black; border-radius: 10px; height:500px; background-color: white ">
               <div class="row">
