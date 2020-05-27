@@ -59,9 +59,10 @@ $backgroundColor = 'lightcyan'; // CSS color name or #rrggbb hex format style fo
 # see https://www.w3schools.com/cssref/css_colors.asp for color names and hex codes
 $mapProvider = 'Esri_WorldTopoMap'; // ESRI topo map - no key needed
 //$mapProvider = 'OSM';     // OpenStreetMap - no key needed
-//$mapProvider = 'Terrain'; // Terrain map by stamen.com - no key needed
+//$mapProvider = 'Terrain'; // Terrain map by stamen.com - no key needed (http only)
 //$mapProvider = 'OpenTopo'; // OpenTopoMap.com - no key needed
 //mapProvider = 'Wikimedia'; // Wikimedia map - no key needed
+//mapProvider = 'NatGeo'; // National Geographic Topo map - no key needed
 //
 //$mapProvider = 'MapboxSat';  // Maps by Mapbox.com - API KEY needed in $mapboxAPIkey
 //$mapProvider = 'MapboxTer';  // Maps by Mapbox.com - API KEY needed in $mapboxAPIkey
@@ -92,9 +93,10 @@ Note that specific stream calls for alternate streams may change so it's best to
 <dd>This specifies the default map tile provider to be used. The default is:  
 **= 'Esri_WorldTopoMap';** ESRI topo map - no key needed (Default)  
 **= 'OSM'; OpenStreetMap** - no key needed  
-**= 'Terrain';** Terrain map by stamen.com - no key needed  
+**= 'Terrain';** Terrain map by stamen.com - no key needed (http-only) 
 **= 'OpenTopo';** OpenTopoMap.com - no key needed  
 **= 'Wikimedia';** Wikimedia map - no key needed  
+**= 'NatGeo';** National Geographic Topo map - no key needed  
 **= 'MapboxSat';** Satellite Maps by Mapbox.com - Mapbox API KEY needed  
 **= 'MapboxTer';** Terrain Maps by Mapbox.com - Mapbox API KEY needed</dd>
 
