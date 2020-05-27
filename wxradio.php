@@ -32,6 +32,7 @@
 // Version 1.04 - 05-Jul-2017 - corrected attributions, added more Saratoga template awareness
 // Version 2.00 - 06-Aug-2018 - update to use Leaflet/OpenStreetMaps instead of Google map
 // Version 3.00 - 08-Dec-2019 - support for new NWS NWR site at weather.gov
+// Version 3.02 - 26-May-2020 - updated settings area with additional map choices
 require_once("Settings.php");
 require_once("common.php");
 ############################################################################
@@ -76,13 +77,14 @@ $backgroundColor = 'lightcyan'; // CSS color name or #rrggbb hex format style fo
 # see https://www.w3schools.com/cssref/css_colors.asp for color names and hex codes
 $mapProvider = 'Esri_WorldTopoMap'; // ESRI topo map - no key needed
 //$mapProvider = 'OSM';     // OpenStreetMap - no key needed
-//$mapProvider = 'Terrain'; // Terrain map by stamen.com - no key needed
+//$mapProvider = 'Terrain'; // Terrain map by stamen.com - no key needed (HTTP Sites only)
 //$mapProvider = 'OpenTopo'; // OpenTopoMap.com - no key needed
-//mapProvider = 'Wikimedia'; // Wikimedia map - no key needed
-//
+//$mapProvider = 'Wikimedia'; // Wikimedia map - no key needed
+//$mapProvider = 'NatGeo'; // National Geographic Topo map - no key needed
+
+// Get a Mapbox API key at: https://www.mapbox.com/signin/
 //$mapProvider = 'MapboxSat';  // Maps by Mapbox.com - API KEY needed in $mapboxAPIkey
 //$mapProvider = 'MapboxTer';  // Maps by Mapbox.com - API KEY needed in $mapboxAPIkey
-
 $mapboxAPIkey = '--mapbox-API-key--';  // use this for the Access Token (API key) to MapBox
 //
 ############################################################################
@@ -91,7 +93,7 @@ $mapboxAPIkey = '--mapbox-API-key--';  // use this for the Access Token (API key
 ?>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="bootstrap.3.3.7-mod.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="NWR-radios-data.php"></script>
 <!-- Added to use Leaflet/OpenStreetMaps+others for map display -->

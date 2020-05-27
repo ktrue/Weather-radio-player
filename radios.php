@@ -19,6 +19,7 @@ if (isset($_REQUEST['sce']) && ( strtolower($_REQUEST['sce']) == 'view' or
 // Version 1.04 - 05-Jul-2017 - corrected attributions for script, added backgroundcolor option
 // Version 2.00 - 06-Aug-2018 - update to use Leaflet/OpenStreetMaps instead of Google map
 // Version 3.00 - 08-Dec-2019 - support for NWS NWR site at weather.gov
+// Version 3.02 - 26-May-2020 - updated settings area with additional map choices
 ############################################################################
 # wxradio settings
 #
@@ -48,16 +49,14 @@ $showMapSelector = true; // Shows open source map selection drop down above the 
 
 $mapProvider = 'Esri_WorldTopoMap'; // ESRI topo map - no key needed
 //$mapProvider = 'OSM';     // OpenStreetMap - no key needed
-//$mapProvider = 'Terrain'; // Terrain map by stamen.com - no key needed
+//$mapProvider = 'Terrain'; // Terrain map by stamen.com - no key needed (HTTP Sites only)
 //$mapProvider = 'OpenTopo'; // OpenTopoMap.com - no key needed
 //$mapProvider = 'Wikimedia'; // Wikimedia map - no key needed
+//$mapProvider = 'NatGeo'; // National Geographic Topo map - no key needed
 
 // Get a Mapbox API key at: https://www.mapbox.com/signin/
 //$mapProvider = 'MapboxSat';  // Maps by Mapbox.com - API KEY needed in $mapboxAPIkey
 //$mapProvider = 'MapboxTer';  // Maps by Mapbox.com - API KEY needed in $mapboxAPIkey
-//$mapProvider = 'MapboxSatStreet';  // Maps by Mapbox.com - API KEY needed in $mapboxAPIkey
-//$mapProvider = 'MapboxDark';  // Maps by Mapbox.com - API KEY needed in $mapboxAPIkey
-//$mapProvider = 'MapboxLight';  // Maps by Mapbox.com - API KEY needed in $mapboxAPIkey
 $mapboxAPIkey = '--mapbox-API-key--';  // use this for the API key to MapBox
 
 ############################################################################
@@ -71,7 +70,7 @@ header('Content-type: text/html; charset=UTF-8');
   <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="bootstrap.3.3.7-mod.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="NWR-radios-data.php"></script>
 <!-- Added to use Leaflet/OpenStreetMaps+others for map display -->

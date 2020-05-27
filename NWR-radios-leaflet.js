@@ -4,8 +4,24 @@ This is the collection of scripts to support the wxradio.php
 
 // Version 2.00 - 06-Aug-2018 - rewrite to use Leaflet/OpenStreetMaps+others for map display
 // Version 3.00 - 04-Dec-2019 - additional scripts for updated display - NWR site at weather.gov
+// Version 3.02 - 26-May-2020 - add shim function for IE11 missing includes() function
 
 Note: no customization of this file is required.
+*/
+if(typeof String.prototype.includes == 'undefined') { /* shim function for IE11 */
+	String.prototype.includes = function (str,start) {
+  var returnValue = false;
+  var tststr = str;
+	if (typeof start == 'number') {
+		tststr = str.substr(start);
+	}
+  if (this.indexOf(tststr) !== -1) {
+    returnValue = true;
+  }
+
+  return returnValue;
+  }
+}
 
 /*
  Leaflet 1.0.3, a JS library for interactive maps. http://leafletjs.com
