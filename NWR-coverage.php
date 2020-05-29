@@ -7,8 +7,39 @@
 #
 # Version 1.00 - 06-Aug-2018 - initial release with wxradio V2.00
 # Version 2.00 - 08-Dec-2019 - repurposed for proxy access to radio coverage shapefiles
+# Version 3.03 - 28-May-2020 - corrected cache location if used in Saratoga template
+// Settings (not normally needing change as Saratoga template overrides will work)
+//
+  $cacheFileDir = './';   // default cache file directory
+  $cacheName = "NWR-radios-data.js";  // used to store the file so we don't have to
+//
+// end of settings -------------------------------------------------------------
 
-$cacheName = "NWR-radios-data.js";  // used to store the file so we don't have to
+// overrides from Settings.php if available
+if(file_exists("Settings.php")) {include_once("Settings.php");}
+global $SITE;
+if (isset($SITE['cacheFileDir']))    {$cacheFileDir = $SITE['cacheFileDir']; }
+// end of overrides from Settings.php
+
+$cacheName = $cacheFileDir.$cacheName;
+
+if (isset($_REQUEST['sce']) && strtolower($_REQUEST['sce']) == 'view' ) {
+   //--self downloader --
+   $filenameReal = __FILE__;
+   $download_size = filesize($filenameReal);
+   header('Pragma: public');
+   header('Cache-Control: private');
+   header('Cache-Control: no-cache, must-revalidate');
+   header("Content-type: text/plain");
+   header("Accept-Ranges: bytes");
+   header("Content-Length: $download_size");
+   header('Connection: close');
+   
+   readfile($filenameReal);
+   exit;
+}
+
+
 $JSON = array();
 
 if(file_exists($cacheName)) {
@@ -23,7 +54,7 @@ if(file_exists($cacheName)) {
 //	print $content;
 	$JSON = json_decode($content,true);
 	switch (json_last_error()) {
-	  case JSON_ERROR_NONE:           $error = '';                                                break;
+	  case JSON_ERROR_NONE:           $error = 'No JSON error';                                                break;
 	  case JSON_ERROR_DEPTH:          $error = '- Maximum stack depth exceeded';                             break;
 	  case JSON_ERROR_STATE_MISMATCH: $error = '- Underflow or the modes mismatch';                          break;
 	  case JSON_ERROR_CTRL_CHAR:      $error = '- Unexpected control character found';                       break;
@@ -49,11 +80,11 @@ if(isset($_GET['cover'])) {
   $NWRURL = 'https://www.weather.gov/source/nwr/same/%s_same.zip';
 	$radioZIP = $RADIO."_same.zip";
 }
-
+$RC = '(not run)';
 if(strlen($RADIO) <= 6 and strlen($RADIO) > 3 and 
     isset($JSON[$RADIO]) and !empty($JSON[$RADIO]['mapurl']) ) {
 		$URL = sprintf($NWRURL,$RADIO);
-		list($headers,$content) = NWR_fetchUrlWithoutHanging($URL,false);
+		list($headers,$content,$RC) = NWR_fetchUrlWithoutHanging($URL,false);
 		if(preg_match('|\nLast-Modified: (.*)\r\n|Uis',$headers,$M)) {
 			$lastModified = "Last-Modified: ".$M[1];
 		} else {
@@ -71,13 +102,17 @@ if(strlen($RADIO) <= 6 and strlen($RADIO) > 3 and
 		}
 }
 	
-header("HTTP/1.0 404 Not Found");
+header("HTTP/1.1 404 Not Found");
 if(isset($_REQUEST['debug'])) {
+	$URL = sprintf($NWRURL,$RADIO);
 	print "<pre>\n";
 	print "RADIO='$RADIO'\n";
 	print "NWRURL='$NWRURL'\n";
+	print "URL='$URL'\n";
+	print "radioZIP='$radioZIP'\n";
 	print "Headers:\n".$headers."\n";
-	print "error: $error\n";
+	print "JSON error: $error\n";
+	print "curl RC='$RC'\n";
 	if(strlen($error)>0) {
 		print "----------raw JSON string----------------\n";
 		print $content;
@@ -197,7 +232,10 @@ Array
   if($cinfo['http_code'] <> '200') {
     $Status .= "<!-- headers returned:\n".$headers."\n -->\n"; 
   }
-  return array($headers,$content);                                                 // return headers+contents
+	if(isset($_REQUEST['debug'])) {
+		print $Status;
+	}
+  return array($headers,$content,$cinfo['http_code']);                                                 // return headers+contents
 
  } else {
 //   print "<!-- using file_get_contents function -->\n";
