@@ -8,7 +8,7 @@
 // Version 2.01 - 15-Sep-2018 - support for HTTPS for noaaweatherradio.org accesses
 // Version 3.00 - 08-Dec-2019 - support for new NWS NWR site at weather.gov
 // Version 3.01 - 25-May-2020 - added SSL/padlock indicator for SSL streams
-// Versopm 3.04 - 15-Sep-2020 - fixed SAME code display due to changed NWS shapefile contents
+// Version 3.04 - 15-Sep-2020 - fixed SAME code display due to changed NWS shapefile contents
 
 if(file_exists("Settings.php")) {include_once("Settings.php"); }
 global $SITE;

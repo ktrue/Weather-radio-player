@@ -23,7 +23,7 @@ Major changes from the Chappell/Clifton/Lincoln versions include:
 // Version 2.02 - 11-Feb-2019 - use direct https link for NWR coverage graphic map
 // Version 3.00 - 08-Dec-2019 - modified to use www.weather.gov/nwr sources for data as www.nws.noaa.gov/nwr is deprecated
 // Version 3.01 - 25-May-2020 - added SSL/padlock indicators for SSL streams
-// Versopm 3.04 - 15-Sep-2020 - fixed SAME code display due to changed NWS shapefile contents
+// Version 3.04 - 15-Sep-2020 - fixed SAME code display due to changed NWS shapefile contents
 */
 // note: all the data will come from NWR-radio-data.js JSON loaded by the HTML page
 var selectedstation = '';
