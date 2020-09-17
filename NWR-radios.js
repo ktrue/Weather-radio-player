@@ -23,7 +23,7 @@ Major changes from the Chappell/Clifton/Lincoln versions include:
 // Version 2.02 - 11-Feb-2019 - use direct https link for NWR coverage graphic map
 // Version 3.00 - 08-Dec-2019 - modified to use www.weather.gov/nwr sources for data as www.nws.noaa.gov/nwr is deprecated
 // Version 3.01 - 25-May-2020 - added SSL/padlock indicators for SSL streams
-
+// Versopm 3.04 - 15-Sep-2020 - fixed SAME code display due to changed NWS shapefile contents
 */
 // note: all the data will come from NWR-radio-data.js JSON loaded by the HTML page
 var selectedstation = '';
@@ -55,6 +55,17 @@ function getSC () {
 }
 /* end V3.00 added functions (*/
 
+function getSAMEtext(call,county) {
+	// console.log('getSAMEtext call='+call+' county="'+county+'");
+	if(typeof data[call].samecode[county] != undefined) {
+		var sctext = data[call].samecode[county];
+		var t = sctext.split("(");
+		sctext = "<b>"+t[0]+"</b>("+t[1];
+	} else {
+		var sctext = county;
+	}
+	return sctext;
+}
 function loadDropdown(data,findstation) {
 	// generate the option/select box HTML from the JSON file
 /*
@@ -63,20 +74,32 @@ function loadDropdown(data,findstation) {
         "alt": "N",
         "loc": "Monterey, CA",
         "freq": "162.550 MHz",
-        "who": "Saratoga-Weather.org",
-        "type": "PWS",
-        "wxurl": "http:\/\/saratoga-weather.org",
-        "lat": 37.155,
-        "long": -121.897222,
+        "who": " Saratoga-Weather.org",
+        "type": "COM",
+        "wxurl": "https:\/\/saratoga-weather.org",
+        "lat": "37.155000",
+        "long": "-121.897222",
         "watts": "330",
         "xmloc": "Mt. Umunhum,CA",
         "wfo": "Monterey",
-        "wxown": "KEC49",
-        "radiourl": "http:\/\/saratogawx.dyndns.org:88\/broadwave.mp3",
-        "mapurl": "http:\/\/www.nws.noaa.gov\/nwr\/Maps\/GIF\/KEC49.gif",
-        "logo": "http:\/\/noaaweatherradio.org\/content\/thumbnails\/NWR150.png",
+        "wxown": "<small title=\"Great Quality\" style=\"color:yellow;display:inline;font-size:150%\">&starf;<\/small>KEC49",
+        "radiourl": "https:\/\/video1.getstreamhosting.com:8746\/KEC49.mp3",
+        "mapurl": "https:\/\/www.nws.noaa.gov\/nwr\/Maps\/GIF\/KEC49.gif",
+        "logo": "https:\/\/noaaweatherradio.org\/content\/thumbnails\/NWR150.png",
         "state": "California",
-        "stateabbr": "CA"
+        "stateabbr": "CA",
+        "goldstar": "<small title=\"Great Quality\" style=\"color:yellow;display:inline;font-size:150%\">&starf;<\/small>",
+        "samecode": {
+            "Alameda": "Alameda, CA(SAME 006001)",
+            "Contra Costa": "Contra Costa, CA(SAME 006013 for VALLEYS)",
+            "Monterey": "Monterey, CA(SAME 006053)",
+            "Napa": "Napa, CA(SAME 006055 for SOUTH)",
+            "San Benito": "San Benito, CA(SAME 006069 for NORTH)",
+            "San Francisco": "San Francisco, CA(SAME 006075)",
+            "San Mateo": "San Mateo, CA(SAME 006081)",
+            "Santa Clara": "Santa Clara, CA(SAME 006085)",
+            "Santa Cruz": "Santa Cruz, CA(SAME 006087)"
+        }
     },
 */
 	var keylist = Object;
@@ -201,7 +224,7 @@ function showStation(call, auto) {
     var mapurl = data[call].mapurl;
 		
     if(mapurl !== '' && !mapurl.match(/WNWS/)) {
-    var txt = '<a href="https://www.weather.gov/nwr/sites?site=' + call + '"  style="text-align:center" alt="Coverage Map - ' + data[call].loc + ' Available" target="_blank">NWR Transmitter Coverage Map/Details for '+call+'</a>'
+    var txt = '<a href="https://www.weather.gov/nwr/sites?site=' + call + '"  style="text-align:center" alt="Coverage Map - ' + data[call].loc + ' Available" target="_blank">NWS NWR Transmitter Coverage Map/Details for '+call+'</a>'
 		} else if(mapurl == '') {
 			var txt = 'Canada transmitter coverage maps are not available.';
 		} else {
@@ -371,9 +394,11 @@ SITE_NAME: Monterey
             }
         },
         onEachFeature: function(feature, layer){
-          layer.bindPopup("<strong>COUNTY</strong><br /><b>" + feature.properties.NAME
-					+ "</b><br>SAME: <b>0"+feature.properties.FIPS+"</b>");
-					addSC('<b>'+feature.properties.NAME+"</b> (SAME 0"+feature.properties.FIPS+")");
+		      //var samecodes = data[call][samecode];
+					var sctext = getSAMEtext(call,feature.properties.NAME);
+          layer.bindPopup("<strong>COUNTY</strong><br /><b>" + sctext
+					+ "</b>");
+					addSC(sctext);
 					// console.log(SC);
           layer.on('mouseover', function() { layer.openPopup(); });
           layer.on('mouseout', function() { layer.closePopup(); });
@@ -392,8 +417,6 @@ GEOID: 06085
 NAME: Santa Clara
 OBJECTID_1: 540
 Name_1: Santa Clara
-FIPS: 06085
-Call_sign: KEC49
 */
 
 //    cntyfile.addTo(map);
