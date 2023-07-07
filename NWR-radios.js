@@ -24,6 +24,7 @@ Major changes from the Chappell/Clifton/Lincoln versions include:
 // Version 3.00 - 08-Dec-2019 - modified to use www.weather.gov/nwr sources for data as www.nws.noaa.gov/nwr is deprecated
 // Version 3.01 - 25-May-2020 - added SSL/padlock indicators for SSL streams
 // Version 3.04 - 15-Sep-2020 - fixed SAME code display due to changed NWS shapefile contents
+// Version 3.05 - 07-Jul-2023 - replaced SAME code and coverage display due to NWS website changes
 */
 // note: all the data will come from NWR-radio-data.js JSON loaded by the HTML page
 var selectedstation = '';
@@ -370,19 +371,27 @@ SITE_NAME: Monterey
         weight: 2.1
     }).addTo(mymap);
 /*
-    SC = ["Alameda (SAME 006001)",
-"San Mateo (SAME 006081)",
-"Santa Clara (SAME 006085)",
-"San Benito (SAME 006069)",
-"Monterey (SAME 006053)",
-"Contra Costa (SAME 006013)",
-"San Francisco (SAME 006075)",
-"Santa Cruz (SAME 006087)",
-"Napa (SAME 006055)"];
+	"samecode": {
+			"Alameda": "Alameda,&nbsp;CA(SAME&nbsp;006001)",
+			"Contra Costa": "Contra&nbsp;Costa,&nbsp;CA(SAME&nbsp;006013&nbsp;for&nbsp;VALLEYS)",
+			"Monterey": "Monterey,&nbsp;CA(SAME&nbsp;006053)",
+			"Napa": "Napa,&nbsp;CA(SAME&nbsp;006055&nbsp;for&nbsp;SOUTH)",
+			"San Benito": "San&nbsp;Benito,&nbsp;CA(SAME&nbsp;006069&nbsp;for&nbsp;NORTH)",
+			"San Francisco": "San&nbsp;Francisco,&nbsp;CA(SAME&nbsp;006075)",
+			"San Mateo": "San&nbsp;Mateo,&nbsp;CA(SAME&nbsp;006081)",
+			"Santa Clara": "Santa&nbsp;Clara,&nbsp;CA(SAME&nbsp;006085)",
+			"Santa Cruz": "Santa&nbsp;Cruz,&nbsp;CA(SAME&nbsp;006087)"
+	}
 //*/
-		
+  var labelLayer = new L.layerGroup();
+
+  for (var countyname in data[call]['samecode']) {
+		  var thesame = data[call]['samecode'][countyname];
+		  var tsame = thesame.match(/(\d{6})/)[1];
+		  console.log('countyname='+countyname+' thesame='+thesame+' tsame='+tsame);
+			
     // LOAD COUNTY ALERTING AREA SHAPE FILES
-    var cntyfile = new L.Shapefile('NWR-coverage.php?cover=' + call + '&type=_same.zip', { 
+    var cntyfile = new L.Shapefile('NWR-coverage.php?cover=' + call + '&same='+tsame+'&type=_same.zip', { 
 			  crossOrigin: 'anonymous',
 				useCors: false,
         style: function(feature) {
@@ -395,7 +404,7 @@ SITE_NAME: Monterey
         },
         onEachFeature: function(feature, layer){
 		      //var samecodes = data[call][samecode];
-					var sctext = getSAMEtext(call,feature.properties.NAME);
+					var sctext = getSAMEtext(call,feature.properties.COUNTYNAME);
           layer.bindPopup("<strong>COUNTY</strong><br /><b>" + sctext
 					+ "</b>");
 					addSC(sctext);
@@ -408,7 +417,8 @@ SITE_NAME: Monterey
 		    $('#samecodes').html(text);
 
 		});
-		
+    cntyfile.addTo(labelLayer);
+	}
 
 /* sample properties in _same.zip file:
 STATEFP: 06
@@ -422,7 +432,7 @@ Name_1: Santa Clara
 //    cntyfile.addTo(map);
     var overlayMap = {
         "Propagation": shpfile,
-        "Alerting Area": cntyfile
+        "Alerting Area": labelLayer
     };
 
     L.control.layers(baseLayers,overlayMap,{collapsed:false}).addTo(mymap);

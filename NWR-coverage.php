@@ -8,6 +8,7 @@
 # Version 1.00 - 06-Aug-2018 - initial release with wxradio V2.00
 # Version 2.00 - 08-Dec-2019 - repurposed for proxy access to radio coverage shapefiles
 # Version 3.03 - 28-May-2020 - corrected cache location if used in Saratoga template
+# Version 3.04 - 07-Jul-2023 - update for changes to NWR source website
 // Settings (not normally needing change as Saratoga template overrides will work)
 //
   $cacheFileDir = './';   // default cache file directory
@@ -80,16 +81,45 @@ if(isset($_GET['cover'])) {
   $NWRURL = 'https://www.weather.gov/source/nwr/same/%s_same.zip';
 	$radioZIP = $RADIO."_same.zip";
 }
+
+$same = '';
+if(isset($_GET['same'])) {
+	$same = preg_replace('/[^0-9]/','',$_GET['same']); //
+	# https://www.weather.gov/source/nwr/pca/006085.zip
+  $NWRURL = 'https://www.weather.gov/source/nwr/pca/%s.zip';
+	$radioZIP = $same.".zip";
+}
+
 $RC = '(not run)';
 if(strlen($RADIO) <= 6 and strlen($RADIO) > 3 and 
     isset($JSON[$RADIO]) and !empty($JSON[$RADIO]['mapurl']) ) {
-		$URL = sprintf($NWRURL,$RADIO);
+		if($same == '') {
+		  $URL = sprintf($NWRURL,$RADIO);
+		} else {
+			$URL = sprintf($NWRURL,$same);
+		}
 		list($headers,$content,$RC) = NWR_fetchUrlWithoutHanging($URL,false);
 		if(preg_match('|\nLast-Modified: (.*)\r\n|Uis',$headers,$M)) {
 			$lastModified = "Last-Modified: ".$M[1];
 		} else {
 			$lastModified = '';
 		}
+if(isset($_REQUEST['debug'])) {
+	$URL = sprintf($NWRURL,$RADIO);
+	print "<pre>\n";
+	print "RADIO='$RADIO'\n";
+	print "NWRURL='$NWRURL'\n";
+	print "URL='$URL'\n";
+	print "radioZIP='$radioZIP'\n";
+	print "Headers:\n".$headers."\n";
+	print "JSON error: $error\n";
+	print "curl RC='$RC'\n";
+	if(strlen($error)>0) {
+		print "----------raw JSON string----------------\n";
+		print $content;
+		print "\n---------------------------------------\n";
+	}
+}
 		//file_put_contents($radioZIP.'headers.txt',$headers);
 		if(strlen($content) > 10) {
 			header("Content-type: application/zip");
