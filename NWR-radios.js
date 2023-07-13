@@ -25,6 +25,7 @@ Major changes from the Chappell/Clifton/Lincoln versions include:
 // Version 3.01 - 25-May-2020 - added SSL/padlock indicators for SSL streams
 // Version 3.04 - 15-Sep-2020 - fixed SAME code display due to changed NWS shapefile contents
 // Version 3.05 - 07-Jul-2023 - replaced SAME code and coverage display due to NWS website changes
+// Version 3.07 - 13-Jul-2023 - fixed SAME code display for same-named counties in adjacent states
 */
 // note: all the data will come from NWR-radio-data.js JSON loaded by the HTML page
 var selectedstation = '';
@@ -385,10 +386,12 @@ SITE_NAME: Monterey
 //*/
   var labelLayer = new L.layerGroup();
 
-  for (var countyname in data[call]['samecode']) {
-		  var thesame = data[call]['samecode'][countyname];
+  for (var countynamest in data[call]['samecode']) {
+		  var cs = countynamest.split('|');
+			var countyname = cs[0];
+		  var thesame = data[call]['samecode'][countynamest];
 		  var tsame = thesame.match(/(\d{6})/)[1];
-		  console.log('countyname='+countyname+' thesame='+thesame+' tsame='+tsame);
+		  console.log('countynamest='+countynamest+' countyname='+countyname+' thesame='+thesame+' tsame='+tsame);
 			
     // LOAD COUNTY ALERTING AREA SHAPE FILES
     var cntyfile = new L.Shapefile('NWR-coverage.php?cover=' + call + '&same='+tsame+'&type=_same.zip', { 
@@ -404,7 +407,7 @@ SITE_NAME: Monterey
         },
         onEachFeature: function(feature, layer){
 		      //var samecodes = data[call][samecode];
-					var sctext = getSAMEtext(call,feature.properties.COUNTYNAME);
+					var sctext = getSAMEtext(call,feature.properties.COUNTYNAME+'|'+feature.properties.STATE);
           layer.bindPopup("<strong>COUNTY</strong><br /><b>" + sctext
 					+ "</b>");
 					addSC(sctext);
