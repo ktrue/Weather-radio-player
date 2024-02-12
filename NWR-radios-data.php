@@ -8,6 +8,7 @@
 // Version 1.01 - 02-Aug-2017 - added header type text/javascript to fix 'nosniff' issue
 // Version 1.02 - 15-Sep-2018 - support for HTTPS for noaaweatherradio.org accesses
 // Version 3.00 - 08-Dec-2019 - support for moved NWR site to weather.gov
+// Version 3.01 - 12-Feb-2024 - fix file save issue
 //
 // Settings (not normally needing change as Saratoga template overrides will work)
 //
@@ -57,7 +58,7 @@ if ($Force==1 or !file_exists($cacheName) or
    (file_exists($cacheName) and filemtime($cacheName) + $refreshTime < time()) ) {
     
 		$html = fetchUrlWithoutHanging($fileName,$cacheName);
-	  preg_match('/HTTP\/1.1 (\d+)/',$html,$m);
+	  preg_match('/HTTP\/\S+ (\d+)/',$html,$m);
 		if(isset($m[1]) and $m[1] == '200') {
 			$fSize = strlen($html);
 			$Status .= "// loaded $fileName - $fSize bytes\n";
