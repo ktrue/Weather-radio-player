@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors','1');
 #
 # a simple proxy program to get/return the https://www.weather.gov/nwr/Maps/GIF/{radio}.gif
 # so the radios.php/wxradio.php can use HTTPS even while www.nws.noaa.gov is HTTP only
@@ -9,6 +11,7 @@
 # Version 2.00 - 08-Dec-2019 - repurposed for proxy access to radio coverage shapefiles
 # Version 3.03 - 28-May-2020 - corrected cache location if used in Saratoga template
 # Version 3.04 - 07-Jul-2023 - update for changes to NWR source website
+# Version 3.05 - 12-Feb-2024 - added additional debugging for curl fetch
 // Settings (not normally needing change as Saratoga template overrides will work)
 //
   $cacheFileDir = './';   // default cache file directory
@@ -17,10 +20,11 @@
 // end of settings -------------------------------------------------------------
 
 // overrides from Settings.php if available
-if(file_exists("Settings.php")) {include_once("Settings.php");}
-global $SITE;
+#if(file_exists("Settings.php")) {include_once("Settings.php");}
+global $SITE,$Status;
 if (isset($SITE['cacheFileDir']))    {$cacheFileDir = $SITE['cacheFileDir']; }
 // end of overrides from Settings.php
+$Version = 'NWR-coverage.php V3.05 - 12-Feb-2024';
 
 $cacheName = $cacheFileDir.$cacheName;
 
@@ -42,20 +46,25 @@ if (isset($_REQUEST['sce']) && strtolower($_REQUEST['sce']) == 'view' ) {
 
 
 $JSON = array();
-
+$Status = "$Version\n";
+if(empty(ini_get('request_order')) ){
+	$Status .= "empty request_order in PHP.. set to GP\n";
+	ini_set('request_order','GP');
+}
+	
 if(file_exists($cacheName)) {
 	$html = file_get_contents($cacheName);
   $i = strpos($html,"var data = ");
   $headers = substr($html,0,$i);
-  $content = substr($html,$i);
+  $rawJSON = substr($html,$i);
 	// have to convert from JavaScript to pure JSON format:
-	$content = str_replace('var data = ','',$content);
-	$content = str_replace('};','}',$content);
+	$rawJSON = str_replace('var data = ','',$rawJSON);
+	$rawJSON = str_replace('};','}',$rawJSON);
 //	header("Content-type: text/plain");
 //	print $content;
-	$JSON = json_decode($content,true);
+	$JSON = json_decode($rawJSON,true);
 	switch (json_last_error()) {
-	  case JSON_ERROR_NONE:           $error = 'No JSON error';                                                break;
+	  case JSON_ERROR_NONE:           $error = 'No JSON error';                                              break;
 	  case JSON_ERROR_DEPTH:          $error = '- Maximum stack depth exceeded';                             break;
 	  case JSON_ERROR_STATE_MISMATCH: $error = '- Underflow or the modes mismatch';                          break;
 	  case JSON_ERROR_CTRL_CHAR:      $error = '- Unexpected control character found';                       break;
@@ -92,62 +101,69 @@ if(isset($_GET['same'])) {
 
 $RC = '(not run)';
 if(strlen($RADIO) <= 6 and strlen($RADIO) > 3 and 
-    isset($JSON[$RADIO]) and !empty($JSON[$RADIO]['mapurl']) ) {
-		if($same == '') {
-		  $URL = sprintf($NWRURL,$RADIO);
-		} else {
-			$URL = sprintf($NWRURL,$same);
-		}
-		list($headers,$content,$RC) = NWR_fetchUrlWithoutHanging($URL,false);
-		if(preg_match('|\nLast-Modified: (.*)\r\n|Uis',$headers,$M)) {
-			$lastModified = "Last-Modified: ".$M[1];
-		} else {
-			$lastModified = '';
-		}
-if(isset($_REQUEST['debug'])) {
-	$URL = sprintf($NWRURL,$RADIO);
-	print "<pre>\n";
-	print "RADIO='$RADIO'\n";
-	print "NWRURL='$NWRURL'\n";
-	print "URL='$URL'\n";
-	print "radioZIP='$radioZIP'\n";
-	print "Headers:\n".$headers."\n";
-	print "JSON error: $error\n";
-	print "curl RC='$RC'\n";
-	if(strlen($error)>0) {
-		print "----------raw JSON string----------------\n";
-		print $content;
-		print "\n---------------------------------------\n";
+	isset($JSON[$RADIO]) and !empty($JSON[$RADIO]['mapurl']) ) {
+	if($same == '') {
+		$URL = sprintf($NWRURL,$RADIO);
+	} else {
+		$URL = sprintf($NWRURL,$same);
 	}
-}
-		//file_put_contents($radioZIP.'headers.txt',$headers);
-		if(strlen($content) > 10) {
-			header("Content-type: application/zip");
-			header("Content-Length: " . strlen($content));
-			if(strlen($lastModified) > 0) {
-				header($lastModified);
-			}
-			print $content;
-			return;
-		}
-}
+	$Status .= " running NWR_fetchUrlWithoutHanging\n";
+	list($headers,$content,$RC) = NWR_fetchUrlWithoutHanging($URL,false);
+	$Status .= " returned from NWR_fetchUrlWithoutHanging RC=$RC\n";
 	
-header("HTTP/1.1 404 Not Found");
-if(isset($_REQUEST['debug'])) {
-	$URL = sprintf($NWRURL,$RADIO);
-	print "<pre>\n";
-	print "RADIO='$RADIO'\n";
-	print "NWRURL='$NWRURL'\n";
-	print "URL='$URL'\n";
-	print "radioZIP='$radioZIP'\n";
-	print "Headers:\n".$headers."\n";
-	print "JSON error: $error\n";
-	print "curl RC='$RC'\n";
-	if(strlen($error)>0) {
-		print "----------raw JSON string----------------\n";
+	if(preg_match('|\nLast-Modified: (.*)\r\n|Uis',$headers,$M)) {
+		$lastModified = "Last-Modified: ".$M[1];
+	} else {
+		$lastModified = '';
+	}
+	if(isset($_REQUEST['debug'])) {
+		header('Content-type: text/plain;charset=UTF-8');
+		$URL = sprintf($NWRURL,$RADIO);
+		print "RADIO='$RADIO'\n";
+		print "NWRURL='$NWRURL'\n";
+		print "URL='$URL'\n";
+		print "radioZIP='$radioZIP'\n";
+		print $Status."\n";
+		print "JSON error: $error\n";
+		print "curl RC='$RC'\n";
+		print "Headers:\n".$headers."\n";
+		if($error!=='No JSON error') {
+			print "----------raw JSON string----------------\n";
+			print $rawJSON;
+			print "\n---------------------------------------\n";
+		}
+		return;
+	}
+	//file_put_contents($radioZIP.'headers.txt',$headers);
+	if(strlen($content) > 10) {
+		header("Content-type: application/zip");
+		header("Content-Length: " . strlen($content));
+		if(strlen($lastModified) > 0) {
+			header($lastModified);
+		}
 		print $content;
+		return;
+	}
+} else { # failed the tests
+
+  header("HTTP/1.1 404 Not Found");
+	print "<pre>\n";
+	print "bad request\n";
+	$URL = sprintf($NWRURL,$RADIO);
+	print isset($RADIO)?"RADIO='$RADIO'\n":'';
+	print isset($NWRURL)?"NWRURL='$NWRURL'\n":'';
+	print "URL='$URL'\n";
+	print isset($radioZIP)?"radioZIP='$radioZIP'\n":'';
+	print isset($Status)?$Status."\n":'';
+	print isset($error)?"JSON error: $error\n":'';
+	print isset($RC)?"curl RC='$RC'\n":'';
+	print isset($headers)?"rawJSON Headers:\n".$headers."\n":'';
+	if(isset($error) and $error!=='No JSON error') {
+		print "----------raw JSON string----------------\n";
+		print $rawJSON;
 		print "\n---------------------------------------\n";
 	}
+
 }
 # -------------------functions -------------------------------
 function NWR_fetchUrlWithoutHanging($url,$useFopen) {
@@ -164,7 +180,7 @@ function NWR_fetchUrlWithoutHanging($url,$useFopen) {
   $data = '';
   $domain = parse_url($url,PHP_URL_HOST);
   $theURL = str_replace('nocache','?'.$overall_start,$url);        // add cache-buster to URL if needed
-  $Status .= "<!-- curl fetching '$theURL' -->\n";
+  $Status .= " curl fetching '$theURL'\n";
   $ch = curl_init();                                           // initialize a cURL session
   curl_setopt($ch, CURLOPT_URL, $theURL);                         // connect to provided URL
   curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);                 // don't verify peer certificate
@@ -186,13 +202,13 @@ function NWR_fetchUrlWithoutHanging($url,$useFopen) {
   if (isset($needCookie[$domain])) {
     curl_setopt($ch, $needCookie[$domain]);                    // set the cookie for this request
     curl_setopt($ch, CURLOPT_COOKIESESSION, true);             // and ignore prior cookies
-    $Status .=  "<!-- cookie used '" . $needCookie[$domain] . "' for GET to $domain -->\n";
+    $Status .=  " cookie used '" . $needCookie[$domain] . "' for GET to $domain \n";
   }
 
   $data = curl_exec($ch);                                      // execute session
 
   if(curl_error($ch) <> '') {                                  // IF there is an error
-   $Status .= "<!-- curl Error: ". curl_error($ch) ." -->\n";        //  display error notice
+   $Status .= " curl Error: ". curl_error($ch) ." \n";        //  display error notice
   }
   $cinfo = curl_getinfo($ch);                                  // get info on curl exec.
 /*
@@ -230,7 +246,7 @@ Array
 [local_port] => 54156
 )
 */
-  $Status .= "<!-- HTTP stats: " .
+  $Status .= " HTTP stats: " .
     " RC=".$cinfo['http_code'];
 	if(isset($cinfo['primary_ip'])) {
 		$Status .= " dest=".$cinfo['primary_ip'] ;
@@ -251,7 +267,7 @@ Array
 	  " get=". sprintf("%01.3f",round($cinfo['total_time'] - $cinfo['pretransfer_time'],3));
 	}
     $Status .= " total=".sprintf("%01.3f",round($cinfo['total_time'],3)) .
-    " secs -->\n";
+    " secs \n";
 
   //$Status .= "<!-- curl info\n".print_r($cinfo,true)." -->\n";
   curl_close($ch);                                              // close the cURL session
@@ -260,11 +276,8 @@ Array
   $headers = substr($data,0,$i);
   $content = substr($data,$i+4);
   if($cinfo['http_code'] <> '200') {
-    $Status .= "<!-- headers returned:\n".$headers."\n -->\n"; 
+    $Status .= " headers returned:\n".$headers."\n \n"; 
   }
-	if(isset($_REQUEST['debug'])) {
-		print $Status;
-	}
   return array($headers,$content,$cinfo['http_code']);                                                 // return headers+contents
 
  } else {
@@ -300,12 +313,12 @@ Array
    #$xml = $theaders . "\r\n\r\n" . $xml;
 
    $ms_total = sprintf("%01.3f",round($T_close - $T_start,3)); 
-   $Status .= "<!-- file_get_contents() stats: total=$ms_total secs -->\n";
-   $Status .= "<-- get_headers returns\n".$theaders."\n -->\n";
+   $Status = " file_get_contents() stats: total=$ms_total secs \n";
+   $Status .= " get_headers returns\n".$theaders."\n \n";
 //   print " file() stats: total=$ms_total secs.\n";
    $overall_end = time();
    $overall_elapsed =   $overall_end - $overall_start;
-   $Status .= "<!-- fetch function elapsed= $overall_elapsed secs. -->\n"; 
+   $Status .= " fetch function elapsed= $overall_elapsed secs. \n"; 
 //   print "fetch function elapsed= $overall_elapsed secs.\n"; 
    return($xml);
  }
